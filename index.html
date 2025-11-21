@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milky Status • A+ Writing Services</title>
+    <!-- Inter Font --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for UI/UX --><script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Base Reset and Global Styles */
+        :root {
+            --color-bg: #0a0a0d;
+            --color-surface: #121216;
+            --color-border: #2c2c34;
+            --color-text-primary: #e0e0e9;
+            --color-text-secondary: #a0a0b0;
+            --color-good: #4ade80; /* Green */
+            --color-minor: #facc15; /* Yellow */
+            --color-major: #fb7185; /* Red */
+            --color-loading: #4b5563; /* Gray */
+            --font-inter: 'Inter', sans-serif;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        body {
+            font-family: var(--font-inter);
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            /* Changed body display/alignment to allow wrapper scaling */
+            overflow-x: hidden;
+            display: block; 
+        }
+
+        /* --- New Wrapper for 80% Scale --- */
+        #wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            
+            /* Apply 80% scale transformation */
+            transform: scale(0.8);
+            transform-origin: top left;
+            
+            /* Set dimensions to compensate for scaling: 100% / 0.8 = 125% */
+            width: 125vw;
+            min-height: 125vh;
+        }
+        /* --- End Wrapper Styles --- */
+
+
+        /* Canvas for Particle Background */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2; /* Moved further back since the wrapper now covers the viewport */
+            opacity: 0.15; /* Subtle background */
+        }
+
+        /* Main Content Container */
+        .status-container {
+            width: 90%;
+            max-width: 800px;
+            padding: 3rem 1rem;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .logo-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            color: var(--color-text-secondary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Overall Status Card */
+        .overall-status {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            padding: 2.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .overall-status h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.8rem;
+        }
+
+        .status-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* Status Colors Utility Classes */
+        .status-good { color: var(--color-good); }
+        .status-minor { color: var(--color-minor); }
+        .status-major { color: var(--color-major); }
+
+        /* Component Statuses */
+        .component-list {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 3rem; /* Add margin where history link used to be */
+        }
+
+        .component-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            padding: 1.2rem 1.5rem;
+            border-radius: var(--radius-md);
+        }
+
+        .component-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .component-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        
+        /* New class for the checkmark icon inside component indicators */
+        .status-icon-only {
+            font-size: 2.0rem; /* Increased size to 2.0rem for maximum visibility */
+            line-height: 1;
+            padding: 0 0.5rem;
+            /* Ensure alignment in the component indicator */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-good); /* Ensure explicit green color */
+            animation: fadeInScale 0.5s ease-out; /* Added animation for visibility */
+        }
+        
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Dot Color Mapping */
+        .dot-good { background-color: var(--color-good); }
+        .dot-minor { background-color: var(--color-minor); }
+        .dot-major { background-color: var(--color-major); }
+        .dot-loading { background-color: var(--color-loading); }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            .status-container {
+                padding: 2rem 1rem;
+            }
+            .logo-title {
+                font-size: 2.5rem;
+            }
+            .status-text {
+                font-size: 1.8rem;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Particle Background Canvas --><canvas id="particle-canvas"></canvas>
+
+    <div id="wrapper">
+        <div class="status-container">
+            <header>
+                <div class="logo-title">Milky Status</div>
+                <p class="tagline">Real-time operational status for all A+ Writing services.</p>
+            </header>
+
+            <!-- Overall Status Section --><section class="overall-status">
+                <h2>Current Status</h2>
+                <div id="overallStatusText" class="status-text status-good">
+                    <i class="ph-bold ph-check-circle"></i>
+                    <span>All Systems Operational</span>
+                </div>
+            </section>
+
+            <!-- Component Status List --><section>
+                <h2 style="margin-bottom:1rem; font-size:1.5rem;">Service Components</h2>
+                <div class="component-list">
+                    
+                    <!-- Essay Generation API - Kept --><div class="component-item">
+                        <span class="component-name">Essay Generation API</span>
+                        <div id="status-api" class="component-indicator">
+                            <span class="dot dot-loading"></span>
+                            <span class="status-text">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Research & Sourcing Database - Kept --><div class="component-item">
+                        <span class="component-name">Research & Sourcing Database</span>
+                        <div id="status-db" class="component-indicator">
+                            <span class="dot dot-loading"></span>
+                            <span class="status-text">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Me - Added --><div class="component-item">
+                        <span class="component-name">Contact Me (Email/Form)</span>
+                        <div id="status-contact" class="component-indicator">
+                            <span class="dot dot-loading"></span>
+                            <span class="status-text">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Uptime History Link and Section are now removed --></div>
+    </div>
+
+    <script>
+        // --- 1. Live Particle Background Animation ---
+
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let animationFrameId;
+
+        function resizeCanvas() {
+            // Use the full window size for the canvas, regardless of the wrapper scale
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles.forEach(p => p.maxDistance = Math.max(canvas.width, canvas.height) / 8);
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.maxDistance = Math.max(canvas.width, canvas.height) / 8;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Loop particles around if they go off screen
+                if (this.x > canvas.width || this.x < 0) this.x = (this.x > canvas.width) ? 0 : canvas.width;
+                if (this.y > canvas.height || this.y < 0) this.y = (this.y > canvas.height) ? 0 : canvas.height;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            particles = [];
+            const numberOfParticles = (canvas.width * canvas.height) / 10000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function connectParticles() {
+            let opacityValue = 1;
+            for (let a = 0; a < particles.length; a++) {
+                for (let b = a; b < particles.length; b++) {
+                    const distance = Math.sqrt(
+                        (particles[a].x - particles[b].x) ** 2 + 
+                        (particles[a].y - particles[b].y) ** 2
+                    );
+                    
+                    if (distance < particles[a].maxDistance) {
+                        opacityValue = 1 - (distance / particles[a].maxDistance);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${opacityValue})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            connectParticles();
+            animationFrameId = requestAnimationFrame(animateParticles);
+        }
+
+        // --- 2. Status Logic (Simulated API Fetch) ---
+
+        // Helper function to update a component's status
+        function updateComponentStatus(elementId, status) {
+            const indicator = document.getElementById(elementId);
+            const dot = indicator.querySelector('.dot');
+            const text = indicator.querySelector('.status-text');
+
+            // Clear existing classes and content
+            dot.className = 'dot';
+            dot.style.display = ''; // Reset display
+            text.className = 'status-text';
+            
+            let statusText, dotClass, iconHTML = ''; 
+
+            switch (status) {
+                case 'operational':
+                    statusText = ''; // Removed text
+                    dotClass = ''; // No dot class needed
+                    text.classList.add('status-good', 'status-icon-only'); // Fixed: Added classes individually
+                    // Use a prominent checkmark icon
+                    iconHTML = '<i class="ph-bold ph-check-circle"></i>'; // Changed to outlined icon
+                    dot.style.display = 'none'; // Hide the dot element completely
+                    break;
+                case 'degraded':
+                    statusText = 'Degraded Performance';
+                    dotClass = 'dot-minor';
+                    text.classList.add('status-minor'); // Fixed: Added class individually
+                    break;
+                case 'outage':
+                    statusText = 'Major Outage';
+                    dotClass = 'dot-major';
+                    text.classList.add('status-major'); // Fixed: Added class individually
+                    break;
+                default:
+                    statusText = 'Loading...';
+                    dotClass = 'dot-loading';
+                    text.classList.add('status-loading'); // Fixed: Added class individually
+            }
+
+            if (dotClass) dot.classList.add(dotClass);
+            
+            // Use innerHTML to place the icon or text content
+            text.innerHTML = iconHTML + statusText; 
+            return status;
+        }
+
+        // Function to determine overall status
+        function updateOverallStatus(componentStatuses) {
+            const overallText = document.getElementById('overallStatusText');
+            overallText.className = 'status-text'; // Reset classes
+
+            if (componentStatuses.includes('outage')) {
+                overallText.innerHTML = '<i class="ph-bold ph-x-circle"></i><span>Major Outage</span>';
+                overallText.classList.add('status-major');
+            } else if (componentStatuses.includes('degraded')) {
+                overallText.innerHTML = '<i class="ph-bold ph-warning-circle"></i><span>Degraded Service</span>';
+                overallText.classList.add('status-minor');
+            } else {
+                overallText.innerHTML = '<i class="ph-bold ph-check-circle"></i><span>All Systems Operational</span>';
+                overallText.classList.add('status-good');
+            }
+        }
+
+        // Simulate fetching status data
+        async function fetchStatus() {
+            // Simulated delay for network loading
+            await new Promise(resolve => setTimeout(resolve, 1500)); 
+
+            // Simulate the status for each component
+            const simulatedStatuses = {
+                'status-api': 'operational',
+                'status-db': 'operational', 
+                'status-contact': 'operational' // Updated component list
+            };
+
+            const statuses = [];
+            for (const id in simulatedStatuses) {
+                const status = updateComponentStatus(id, simulatedStatuses[id]);
+                statuses.push(status);
+            }
+
+            updateOverallStatus(statuses);
+        }
+        
+        // --- 3. Initialization ---
+
+        window.onload = function() {
+            // 1. Setup Canvas
+            window.addEventListener('resize', () => {
+                cancelAnimationFrame(animationFrameId);
+                resizeCanvas();
+                createParticles();
+                animateParticles();
+            });
+            resizeCanvas();
+            createParticles();
+            animateParticles();
+
+            // 2. Fetch and display component status
+            fetchStatus();
+        };
+
+    </script>
+</body>
+</html>
